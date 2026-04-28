@@ -28,7 +28,9 @@ import Foundation
 
 public struct SessionConfiguration {
     // 请求超时时间
-    public var timeoutIntervalForRequest: TimeInterval = 60.0
+    public var timeoutIntervalForRequest: TimeInterval = 0
+    // 资源整体下载超时时间
+    public var timeoutIntervalForResource: TimeInterval = 0
     
     private static let MaxConcurrentTasksLimit: Int = 6
 

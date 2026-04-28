@@ -227,7 +227,10 @@ extension DownloadTask {
                 cache.retrieveTmpFile(tmpFileName) {
                 sessionTask = session?.downloadTask(withResumeData: resumeData)
             } else {
-                var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 0)
+                let requestTimeout = manager?.configuration.timeoutIntervalForRequest ?? 60.0
+                var request = URLRequest(url: url,
+                                         cachePolicy: .reloadIgnoringLocalCacheData,
+                                         timeoutInterval: requestTimeout)
                 if let headers = headers {
                     request.allHTTPHeaderFields = headers
                 }

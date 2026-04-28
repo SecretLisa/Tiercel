@@ -271,6 +271,7 @@ public class SessionManager {
         guard shouldCreatSession else { return }
         let sessionConfiguration = URLSessionConfiguration.background(withIdentifier: identifier)
         sessionConfiguration.timeoutIntervalForRequest = configuration.timeoutIntervalForRequest
+        sessionConfiguration.timeoutIntervalForResource = configuration.timeoutIntervalForResource
         sessionConfiguration.httpMaximumConnectionsPerHost = 100000
         sessionConfiguration.allowsCellularAccess = configuration.allowsCellularAccess
         if #available(iOS 13, macOS 10.15, *) {
