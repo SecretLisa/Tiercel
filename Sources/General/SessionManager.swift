@@ -689,18 +689,44 @@ extension SessionManager {
         if self.tasks.isEmpty {
             return
         }
+        // Reconcile cached task states with real URLSession tasks after relaunch.
+        // Cached `.running`/transitional states can become stale and block restart.
+        self.runningTasks.removeAll()
+        self.tasks.forEach { task in
+            switch task.status {
+            case .running, .willSuspend, .willCancel, .willRemove:
+                task.status = .suspended
+            default:
+                break
+            }
+        }
         session?.getTasksWithCompletionHandler { [weak self] (dataTasks, uploadTasks, downloadTasks) in
             guard let self = self else { return }
+            var activeTaskURLs = Set<String>()
             downloadTasks.forEach { downloadTask in
                 if downloadTask.state == .running,
                     let currentURL = downloadTask.currentRequest?.url,
                     let task = self.mapTask(currentURL) {
+                    activeTaskURLs.insert(task.url.absoluteString)
                     self.didStart()
                     self.maintainTasks(with: .appendRunningTasks(task))
                     task.status = .running
                     task.sessionTask = downloadTask
                 }
             }
+            let waitingTasks = self.tasks.filter { task in
+                guard !activeTaskURLs.contains(task.url.absoluteString) else {
+                    return false
+                }
+                switch task.status {
+                case .succeeded, .failed, .removed, .canceled:
+                    return false
+                default:
+                    task.status = .waiting
+                    return true
+                }
+            }
+            waitingTasks.forEach { self._start($0) }
             self.storeTasks()
             //  处理mananger状态
             if !self.shouldComplete() {
